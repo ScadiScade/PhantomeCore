@@ -1,0 +1,77 @@
+;
+; PhantomCoreDriver.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System ; TODO: Change class if necessary (e.g. to DiskDrive for disk filter)
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider=%ManufacturerName%
+CatalogFile=PhantomCoreDriver.cat
+DriverVer= ; Set during build
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+PhantomCoreDriver_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+PhantomCoreDriver.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the coinstaller version matches your WDK
+
+;*****************************************
+; Driver Installation
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%PhantomCoreDriver.DeviceDesc%=PhantomCoreDriver_Device, Root\PhantomCoreDriver
+
+[PhantomCoreDriver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+PhantomCoreDriver.sys
+
+;-------------- Service installation
+[PhantomCoreDriver_Device.NT.Services]
+AddService = PhantomCoreDriver,%SPSVCINST_ASSOCSERVICE%, PhantomCoreDriver_Service_Inst
+
+; -------------- Service installation section
+[PhantomCoreDriver_Service_Inst]
+DisplayName    = %PhantomCoreDriver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\PhantomCoreDriver.sys
+
+;
+;--- PhantomCoreDriver_Device WDF Coinstaller ---
+;
+
+[PhantomCoreDriver_Device.NT.CoInstallers]
+AddReg=PhantomCoreDriver_Device_CoInstaller_AddReg
+CopyFiles=PhantomCoreDriver_Device_CoInstaller_CopyFiles
+
+[PhantomCoreDriver_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[PhantomCoreDriver_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[PhantomCoreDriver_Device.NT.Wdf]
+KmdfService =  PhantomCoreDriver, PhantomCoreDriver_wdfsect
+[PhantomCoreDriver_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="PhantomCoreTeam"
+DiskName = "PhantomCoreDriver Installation Disk"
+PhantomCoreDriver.DeviceDesc = "PhantomCore HWID Spoofer Device"
+PhantomCoreDriver.SVCDESC = "PhantomCore HWID Spoofer Service"

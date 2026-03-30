@@ -1,0 +1,36 @@
+name: Build PhantomCore
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x' # Update if using a different .NET version
+
+    - name: Restore dependencies
+      run: dotnet restore PhantomCore.csproj
+
+    - name: Build
+      run: dotnet build PhantomCore.csproj --configuration Release --no-restore
+
+    - name: Publish (Create single .exe)
+      run: dotnet publish PhantomCore.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: PhantomCore-Release-win-x64
+        path: ./publish/PhantomCore.exe
